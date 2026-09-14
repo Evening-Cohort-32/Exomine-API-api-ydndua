@@ -1,0 +1,6 @@
+@Exomine_API_api_ydndua_HostAddress = http://localhost:5238
+
+GET {{Exomine_API_api_ydndua_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
