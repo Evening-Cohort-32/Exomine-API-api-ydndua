@@ -50,7 +50,7 @@ List<ColonyInventory> colonyInventories = new List<ColonyInventory>
     new ColonyInventory { Id = 4, ColonyId = 3, MineralId = 1, Quantity = 8 },
     new ColonyInventory { Id = 5, ColonyId = 3, MineralId = 2, Quantity = 1 },
     new ColonyInventory { Id = 6, ColonyId = 1, MineralId = 4, Quantity = 1 },
-    new ColonyInventory { Id = 7, ColonyId = 2, MineralId = 4, Quantity = 1 }
+    new ColonyInventory { Id = 7, ColonyId = 2, MineralId = 4, Quantity = 0 }
 };
 
 var builder = WebApplication.CreateBuilder(args);
