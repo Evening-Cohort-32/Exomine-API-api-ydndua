@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Exomine-API-api-ydndua")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+931b785c7678b5f949fb320cc62ac58923a3f534")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb3c8336d40e81970afb567c8bb2befee8ea7544")]
 [assembly: System.Reflection.AssemblyProductAttribute("Exomine-API-api-ydndua")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Exomine-API-api-ydndua")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
