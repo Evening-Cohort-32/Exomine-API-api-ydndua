@@ -5,4 +5,6 @@ public class ColonyDTO
     public int Id { get; set; }
     public string Name { get; set; }
     public string Location { get; set; }
+    public List<GovernorDTO> Governors { get; set; }
+    public List<ColonyInventoryDTO> ColonyInventories { get; set; }
 }
