@@ -1,4 +1,5 @@
-
+using Exomine_API_api_ydndua.Models.DTOs;
+using Exomine_API_api_ydndua.Models;
 
 List<Colony> colonies = new List<Colony>
 {
@@ -13,7 +14,7 @@ List<Governor> governors = new List<Governor>
     new Governor { Id = 2, Name = "Katrina Bahringer", Active = true, ColonyId = 2},
     new Governor { Id = 3, Name = "Lola Wolf", Active = true, ColonyId = 3 },
     new Governor { Id = 4, Name = "Damon Hartmann", Active = true, ColonyId = 3 },
-    new Governor { Id = 2, Name = "Eleanor Voss", Active = false, ColonyId = 2 }
+    new Governor { Id = 5, Name = "Eleanor Voss", Active = false, ColonyId = 2 }
 
 };
 
@@ -74,19 +75,115 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/api/colonies", () =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    return colonies.Select(c => new ColonyDTO
+    {
+        Id = c.Id,
+        Name = c.Name,
+        Location = c.Location,
+        Governors = governors.Where(g => g.ColonyId == c.Id).Select(g => new GovernorDTO
+        {
+            Id = g.Id,
+            Name = g.Name,
+            Active = g.Active,
+            ColonyId = g.ColonyId
+        }).ToList(),
+        ColonyInventories = colonyInventories.Where(ci => ci.ColonyId == c.Id).Select(ci => new ColonyInventoryDTO
+        {
+            Id = ci.Id,
+            ColonyId = ci.ColonyId,
+            MineralId = ci.MineralId,
+            Quantity = ci.Quantity
+        }).ToList()
+    });
+});
+
+app.MapGet("/api/colonies/{id}", (int id) =>
+{
+    Colony colony = colonies.FirstOrDefault(c => c.Id == id);
+    if (colony == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(new ColonyDTO
+    {
+        Id = colony.Id,
+        Name = colony.Name,
+        Location = colony.Location,
+        Governors = governors.Where(g => g.ColonyId == colony.Id).Select(g => new GovernorDTO
+        {
+            Id = g.Id,
+            Name = g.Name,
+            Active = g.Active,
+            ColonyId = g.ColonyId
+        }).ToList(),
+        ColonyInventories = colonyInventories.Where(ci => ci.ColonyId == id).Select(ci => new ColonyInventoryDTO
+        {
+            Id = ci.Id,
+            ColonyId = ci.ColonyId,
+            MineralId = ci.MineralId,
+            Quantity = ci.Quantity
+        }).ToList()
+    });
+
+});
+
+app.MapPost("/api/colonies", (Colony colony) =>
+{
+
+    colony.Id = colonies.Max(c => c.Id) + 1;
+    colonies.Add(colony);
+
+    return Results.Created($"/api/colonies/{colony.Id}", new ColonyDTO
+    {
+        Id = colony.Id,
+        Name = colony.Name,
+        Location = colony.Location,
+        Governors = governors.Where(g => g.ColonyId == colony.Id).Select(g => new GovernorDTO
+        {
+            Id = g.Id,
+            Name = g.Name,
+            Active = g.Active,
+            ColonyId = g.ColonyId
+        }).ToList()
+    });
+});
+
+app.MapPut("/api/colonies/{id}", (int id, Colony colony) =>
+{
+    Colony colonyToUpdate = colonies.FirstOrDefault(c => c.Id == id);
+
+    if (colonyToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (id != colony.Id)
+    {
+        return Results.BadRequest();
+    }
+
+    colonyToUpdate.Id = colony.Id;
+    colonyToUpdate.Name = colony.Name;
+    colonyToUpdate.Location = colony.Location;
+
+    return Results.NoContent();
+
+});
+
+
+app.MapDelete("/api/colonies/{id}", (int id) =>
+{
+    Colony colony = colonies.FirstOrDefault(c => c.Id == id);
+    if (colony == null)
+    {
+        return Results.NotFound();
+    }
+    colonies.RemoveAt(id - 1);
+    return Results.NoContent();
+});
+
+
 
 app.Run();
 
