@@ -1,6 +1,7 @@
 using Exomine_API_api_ydndua.Models.DTOs;
 using Exomine_API_api_ydndua.Models;
 using System.Reflection.Metadata.Ecma335;
+using System.ComponentModel.DataAnnotations;
 
 List<Colony> colonies = new List<Colony>
 {
@@ -53,6 +54,13 @@ List<ColonyInventory> colonyInventories = new List<ColonyInventory>
     new ColonyInventory { Id = 5, ColonyId = 3, MineralId = 2, Quantity = 1 },
     new ColonyInventory { Id = 6, ColonyId = 1, MineralId = 4, Quantity = 1 },
     new ColonyInventory { Id = 7, ColonyId = 2, MineralId = 4, Quantity = 0 }
+};
+
+List<Transaction> transactions = new List<Transaction>
+{
+    new Transaction { Id = 1, GovernorId = 1, ColonyId = 1, FacilityId = 1, MineralId = 1, Quantity = 4, Timestamp = new DateTime(2100, 9, 19)},
+    new Transaction { Id = 2, GovernorId = 2, ColonyId = 2, FacilityId = 2, MineralId = 3, Quantity = 2, Timestamp = new DateTime(2100, 9, 20)}
+
 };
 
 var builder = WebApplication.CreateBuilder(args);
@@ -415,6 +423,40 @@ app.MapDelete("/api/facilityInventories/{id}", (int id) =>
 
     facilityInventories.RemoveAt(id - 1);
     return Results.NoContent();
+});
+
+app.MapGet("/api/transactions", () =>
+{
+    return transactions.Select(t => new TransactionDTO
+    {
+        Id = t.Id,
+        GovernorId = t.GovernorId,
+        ColonyId = t.ColonyId,
+        FacilityId = t.FacilityId,
+        MineralId = t.MineralId,
+        Quantity = t.Quantity,
+        Timestamp = t.Timestamp
+    });
+});
+
+app.MapGet("/api/transactions/{id}", (int id) =>
+{
+    Transaction transaction = transactions.FirstOrDefault(t => t.Id == id);
+
+    if (transaction == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(new TransactionDTO
+    {
+        Id = transaction.Id,
+        GovernorId = transaction.GovernorId,
+        ColonyId = transaction.ColonyId,
+        FacilityId = transaction.FacilityId,
+        MineralId = transaction.MineralId,
+        Quantity = transaction.Quantity,
+        Timestamp = transaction.Timestamp
+    });
 });
 
 
