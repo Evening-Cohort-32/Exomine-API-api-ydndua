@@ -1,5 +1,6 @@
 using Exomine_API_api_ydndua.Models.DTOs;
 using Exomine_API_api_ydndua.Models;
+using System.Reflection.Metadata.Ecma335;
 
 List<Colony> colonies = new List<Colony>
 {
@@ -75,6 +76,158 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
+app.MapGet("/api/minerals", () =>
+{
+    return minerals.Select(m => new MineralDTO
+    {
+        Id = m.Id,
+        Name = m.Name
+    });
+});
+
+app.MapGet("/api/minerals/{id}", (int id) =>
+{
+    Mineral mineral = minerals.FirstOrDefault(m => m.Id == id);
+    if (mineral == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(new MineralDTO
+    {
+        Id = mineral.Id,
+        Name = mineral.Name
+    });
+});
+
+app.MapPost("/api/minerals", (Mineral mineral) =>
+{
+    mineral.Id = minerals.Max(c => c.Id) + 1;
+    minerals.Add(mineral);
+
+    return Results.Created($"/api/minerals/{mineral.Id}", new MineralDTO
+    {
+        Id = mineral.Id,
+        Name = mineral.Name
+    }
+    );
+});
+
+app.MapPut("/api/minerals/{id}", (int id, Mineral mineral) =>
+{
+    Mineral mineralToUpdate = minerals.FirstOrDefault(m => m.Id == id);
+
+    if (mineralToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (id != mineral.Id)
+    {
+        return Results.BadRequest();
+    }
+
+    mineralToUpdate.Id = mineral.Id;
+    mineralToUpdate.Name = mineral.Name;
+
+    return Results.NoContent();
+
+});
+
+app.MapDelete("/api/minerals/{id}", (int id) =>
+{
+    Mineral mineral = minerals.FirstOrDefault(m => m.Id == id);
+    if (mineral == null)
+    {
+        return Results.NotFound();
+    }
+
+    minerals.RemoveAt(id - 1);
+    return Results.NoContent();
+});
+
+app.MapGet("api/colonyInventories", () =>
+{
+    return colonyInventories.Select(ci => new ColonyInventoryDTO
+    {
+        Id = ci.Id,
+        ColonyId = ci.ColonyId,
+        MineralId = ci.MineralId,
+        MineralName = minerals.FirstOrDefault(m => ci.MineralId == m.Id).Name,
+        Quantity = ci.Quantity
+    });
+});
+
+app.MapGet("api/colonyInventories/{id}", (int id) =>
+{
+    ColonyInventory colonyInventory = colonyInventories.FirstOrDefault(ci => ci.Id == id);
+
+    if (colonyInventory == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(new ColonyInventoryDTO
+    {
+        Id = colonyInventory.Id,
+        ColonyId = colonyInventory.ColonyId,
+        MineralId = colonyInventory.MineralId,
+        MineralName = minerals.FirstOrDefault(m => colonyInventory.MineralId == m.Id).Name,
+        Quantity = colonyInventory.Quantity
+    });
+});
+
+app.MapPost("/api/colonyInventories", (ColonyInventory colonyInventory) =>
+{
+    colonyInventory.Id = colonyInventories.Max(ci => ci.Id) + 1;
+    colonyInventories.Add(colonyInventory);
+
+    return Results.Created($"/api/colonyInventories/{colonyInventory.Id}", new ColonyInventoryDTO
+    {
+        Id = colonyInventory.Id,
+        ColonyId = colonyInventory.ColonyId,
+        MineralId = colonyInventory.MineralId,
+        MineralName = minerals.FirstOrDefault(m => colonyInventory.MineralId == m.Id).Name,
+        Quantity = colonyInventory.Quantity
+    });
+
+});
+
+app.MapPut("/api/colonyInventories/{id}", (int id, ColonyInventory colonyInventory) =>
+{
+    ColonyInventory colonyInventoryToUpdate = colonyInventories.FirstOrDefault(ci => ci.Id == id);
+
+    if (colonyInventoryToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (id != colonyInventory.Id)
+    {
+        return Results.BadRequest();
+    }
+
+    colonyInventoryToUpdate.Id = colonyInventory.Id;
+    colonyInventoryToUpdate.ColonyId = colonyInventory.ColonyId;
+    colonyInventoryToUpdate.MineralId = colonyInventory.MineralId;
+    colonyInventoryToUpdate.Quantity = colonyInventory.Quantity;
+
+    return Results.NoContent();
+
+
+});
+
+app.MapDelete("/api/colonyInventories/{id}", (int id) =>
+{
+    ColonyInventory colonyInventory = colonyInventories.FirstOrDefault(ci => ci.Id == id);
+    if (colonyInventory == null)
+    {
+        return Results.NotFound();
+    }
+
+    colonyInventories.RemoveAt(id - 1);
+    return Results.NoContent();
+
+});
+
+
 app.MapGet("/api/colonies", () =>
 {
     return colonies.Select(c => new ColonyDTO
@@ -98,6 +251,7 @@ app.MapGet("/api/colonies", () =>
         }).ToList()
     });
 });
+
 
 app.MapGet("/api/colonies/{id}", (int id) =>
 {
@@ -180,6 +334,86 @@ app.MapDelete("/api/colonies/{id}", (int id) =>
         return Results.NotFound();
     }
     colonies.RemoveAt(id - 1);
+    return Results.NoContent();
+});
+
+app.MapGet("/api/facilityInventories", () =>
+{
+    return facilityInventories.Select(fi => new FacilityInventoryDTO
+    {
+        Id = fi.Id,
+        FacilityId = fi.FacilityId,
+        MineralId = fi.MineralId,
+        MineralName = minerals.FirstOrDefault(m => fi.MineralId == m.Id).Name,
+        Quantity = fi.Quantity
+    });
+});
+
+app.MapGet("/api/facilityInventories/{id}", (int id) =>
+{
+    FacilityInventory facilityInventory = facilityInventories.FirstOrDefault(fi => fi.Id == id);
+
+    if (facilityInventory == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(new FacilityInventoryDTO
+    {
+        Id = facilityInventory.Id,
+        FacilityId = facilityInventory.FacilityId,
+        MineralId = facilityInventory.MineralId,
+        MineralName = minerals.FirstOrDefault(m => facilityInventory.Id == m.Id).Name,
+        Quantity = facilityInventory.Quantity
+    });
+});
+
+app.MapPost("/api/facilityInventories", (FacilityInventory facilityInventory) =>
+{
+    facilityInventory.Id = facilityInventories.Max(fi => fi.Id) + 1;
+    facilityInventories.Add(facilityInventory);
+
+    return Results.Created($"/api/facilityInventories/{facilityInventory.Id}", new FacilityInventoryDTO
+    {
+        Id = facilityInventory.Id,
+        FacilityId = facilityInventory.FacilityId,
+        MineralId = facilityInventory.MineralId,
+        MineralName = minerals.FirstOrDefault(m => facilityInventory.MineralId == m.Id).Name,
+        Quantity = facilityInventory.Quantity
+    });
+});
+
+app.MapPut("/api/facilityInventories/{id}", (int id, FacilityInventory facilityInventory) =>
+{
+    FacilityInventory facilityInventoryToUpdate = facilityInventories.FirstOrDefault(fi => fi.Id == id);
+
+    if (facilityInventoryToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (id != facilityInventory.Id)
+    {
+        return Results.BadRequest();
+    }
+
+    facilityInventoryToUpdate.Id = facilityInventory.Id;
+    facilityInventoryToUpdate.FacilityId = facilityInventory.FacilityId;
+    facilityInventoryToUpdate.MineralId = facilityInventory.MineralId;
+    facilityInventoryToUpdate.Quantity = facilityInventory.Quantity;
+
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/facilityInventories/{id}", (int id) =>
+{
+    FacilityInventory facilityInventory = facilityInventories.FirstOrDefault(fi => fi.Id == id);
+
+    if (facilityInventory == null)
+    {
+        return Results.NotFound();
+    }
+
+    facilityInventories.RemoveAt(id - 1);
     return Results.NoContent();
 });
 
