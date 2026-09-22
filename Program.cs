@@ -2,6 +2,7 @@ using Exomine_API_api_ydndua.Models.DTOs;
 using Exomine_API_api_ydndua.Models;
 using System.Reflection.Metadata.Ecma335;
 using System.ComponentModel.DataAnnotations;
+using System.Dynamic;
 
 List<Colony> colonies = new List<Colony>
 {
@@ -457,6 +458,95 @@ app.MapGet("/api/transactions/{id}", (int id) =>
         Quantity = transaction.Quantity,
         Timestamp = transaction.Timestamp
     });
+});
+
+
+app.MapPut($"/api/transactions", (Transaction transaction) =>
+{
+
+    MiningFacility facility = facilities.FirstOrDefault(f => f.Id == transaction.FacilityId);
+    // if facility does not exist
+    if (facility == null)
+    {
+        Results.BadRequest();
+    }
+    // if facility is inactive
+    if (!facility.Active)
+    {
+        Results.BadRequest();
+    }
+
+    Governor governor = governors.FirstOrDefault(g => g.Id == transaction.Id);
+    // if governor does not exist
+    if (governor == null)
+    {
+        Results.BadRequest();
+    }
+    // if governor is inactive
+    if (!governor.Active)
+    {
+        Results.BadRequest();
+    }
+
+    FacilityInventory facilityInventory = facilityInventories.FirstOrDefault(fi => fi.Id == transaction.FacilityId && fi.MineralId == transaction.MineralId);
+    if (facilityInventory == null)
+    {
+        Results.BadRequest();
+    }
+    if (facilityInventory.Quantity < 1)
+    {
+        Results.BadRequest();
+    }
+    if (facilityInventory != null)
+    {
+        facilityInventory.Quantity -= 1;
+    }
+
+    ColonyInventory colonyInventory = colonyInventories.FirstOrDefault(ci => ci.ColonyId == governor.ColonyId && ci.MineralId == transaction.MineralId);
+    if (colonyInventory != null)
+    {
+        colonyInventory.Quantity += 1;
+    }
+    else
+    {
+        //create colony inventory object
+        ColonyInventory newColonyInventory = new ColonyInventory
+        {
+            Id = 0,
+            ColonyId = transaction.ColonyId,
+            MineralId = transaction.MineralId,
+            Quantity = transaction.Quantity
+        };
+
+        newColonyInventory.Id = colonyInventories.Max(ci => ci.Id) + 1;
+
+        colonyInventories.Add(newColonyInventory);
+
+
+    }
+
+    Transaction transactionToUpdate = transactions.FirstOrDefault(t => t.Id == transaction.Id);
+    if (transactionToUpdate == null)
+    {
+        // create transaction object and add it
+        transaction.Id = transactions.Max(t => t.Id) + 1;
+        transactions.Add(transaction);
+
+        //do I need a return for this?
+        return Results.Created($"/api/transactions/{transaction.Id}", new TransactionDTO
+        {
+            Id = transaction.Id,
+            GovernorId = transaction.GovernorId,
+            ColonyId = transaction.ColonyId,
+            FacilityId = transaction.FacilityId,
+            MineralId = transaction.MineralId,
+            Quantity = transaction.Quantity,
+            Timestamp = DateTime.Now
+        });
+
+    }
+    return Results.NoContent();
+
 });
 
 
