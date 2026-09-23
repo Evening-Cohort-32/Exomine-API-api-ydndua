@@ -149,7 +149,7 @@ app.MapDelete("/api/minerals/{id}", (int id) =>
         return Results.NotFound();
     }
 
-    minerals.RemoveAt(id - 1);
+    minerals.RemoveAt(id);
     return Results.NoContent();
 });
 
@@ -231,7 +231,7 @@ app.MapDelete("/api/colonyInventories/{id}", (int id) =>
         return Results.NotFound();
     }
 
-    colonyInventories.RemoveAt(id - 1);
+    colonyInventories.RemoveAt(id);
     return Results.NoContent();
 
 });
@@ -342,7 +342,7 @@ app.MapDelete("/api/colonies/{id}", (int id) =>
     {
         return Results.NotFound();
     }
-    colonies.RemoveAt(id - 1);
+    colonies.RemoveAt(id);
     return Results.NoContent();
 });
 
@@ -372,7 +372,7 @@ app.MapGet("/api/facilityInventories/{id}", (int id) =>
         Id = facilityInventory.Id,
         FacilityId = facilityInventory.FacilityId,
         MineralId = facilityInventory.MineralId,
-        MineralName = minerals.FirstOrDefault(m => facilityInventory.Id == m.Id).Name,
+        MineralName = minerals.FirstOrDefault(m => facilityInventory.MineralId == m.Id).Name,
         Quantity = facilityInventory.Quantity
     });
 });
@@ -422,7 +422,7 @@ app.MapDelete("/api/facilityInventories/{id}", (int id) =>
         return Results.NotFound();
     }
 
-    facilityInventories.RemoveAt(id - 1);
+    facilityInventories.RemoveAt(id);
     return Results.NoContent();
 });
 
@@ -464,45 +464,56 @@ app.MapGet("/api/transactions/{id}", (int id) =>
 app.MapPut($"/api/transactions", (Transaction transaction) =>
 {
 
+    if (transaction.Id == 0)
+    {
+        transaction.Id = transactions.Max(t => t.Id) + 1;
+    }
+
     MiningFacility facility = facilities.FirstOrDefault(f => f.Id == transaction.FacilityId);
     // if facility does not exist
     if (facility == null)
     {
-        Results.BadRequest();
+        return Results.BadRequest();
     }
     // if facility is inactive
     if (!facility.Active)
     {
-        Results.BadRequest();
+        return Results.BadRequest();
     }
 
-    Governor governor = governors.FirstOrDefault(g => g.Id == transaction.Id);
+    Governor governor = governors.FirstOrDefault(g => g.Id == transaction.GovernorId);
     // if governor does not exist
     if (governor == null)
     {
-        Results.BadRequest();
+        return Results.BadRequest();
     }
     // if governor is inactive
     if (!governor.Active)
     {
-        Results.BadRequest();
+        return Results.BadRequest();
     }
 
-    FacilityInventory facilityInventory = facilityInventories.FirstOrDefault(fi => fi.Id == transaction.FacilityId && fi.MineralId == transaction.MineralId);
+    transaction.ColonyId = governor.ColonyId;
+
+    FacilityInventory facilityInventory = facilityInventories.FirstOrDefault(fi => fi.FacilityId == transaction.FacilityId && fi.MineralId == transaction.MineralId);
+    //if matching facility does not exist
     if (facilityInventory == null)
     {
-        Results.BadRequest();
+        return Results.BadRequest();
     }
+    //if facility does not have enough
     if (facilityInventory.Quantity < 1)
     {
-        Results.BadRequest();
+        return Results.BadRequest();
     }
+    //If facility exists and has enough mineral, decrement by one
     if (facilityInventory != null)
     {
         facilityInventory.Quantity -= 1;
     }
 
     ColonyInventory colonyInventory = colonyInventories.FirstOrDefault(ci => ci.ColonyId == governor.ColonyId && ci.MineralId == transaction.MineralId);
+    //if matching colonyInventory exists, increment by 1
     if (colonyInventory != null)
     {
         colonyInventory.Quantity += 1;
@@ -528,8 +539,9 @@ app.MapPut($"/api/transactions", (Transaction transaction) =>
     Transaction transactionToUpdate = transactions.FirstOrDefault(t => t.Id == transaction.Id);
     if (transactionToUpdate == null)
     {
+        //Add datetime to transaction
+        transaction.Timestamp = DateTime.Now;
         // create transaction object and add it
-        transaction.Id = transactions.Max(t => t.Id) + 1;
         transactions.Add(transaction);
 
         //do I need a return for this?
@@ -541,7 +553,7 @@ app.MapPut($"/api/transactions", (Transaction transaction) =>
             FacilityId = transaction.FacilityId,
             MineralId = transaction.MineralId,
             Quantity = transaction.Quantity,
-            Timestamp = DateTime.Now
+            Timestamp = transaction.Timestamp
         });
 
     }
