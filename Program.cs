@@ -37,8 +37,6 @@ List<Mineral> minerals = new List<Mineral>
     new Mineral { Id = 5, Name = "Nickel" }
 };
 
-List<GovernorHistory> governorHistories = new List<GovernorHistory>();
-
 List<FacilityInventory> facilityInventories = new List<FacilityInventory>
 {
     new FacilityInventory { Id = 1, FacilityId = 1, MineralId = 1, Quantity = 18 },
@@ -461,100 +459,7 @@ app.MapGet("/api/transactions/{id}", (int id) =>
     });
 });
 
-app.MapGet("/api/governors", () =>
-{
-    return governors.Select(g => new GovernorDTO
-    {
-        Id = g.Id,
-        Name = g.Name,
-        Active = g.Active,
-        ColonyId = g.ColonyId
-    });
-});
 
-app.MapGet("/api/governors/{id}", (int id) =>
-{
-    Governor governor = governors.FirstOrDefault(g => g.Id == id);
-    if (governor == null) return Results.NotFound();
-    
-    return Results.Ok(new GovernorDTO
-    {
-        Id = governor.Id,
-        Name = governor.Name,
-        Active = governor.Active,
-        ColonyId = governor.ColonyId
-    });
-});
-
-app.MapPost("/api/governors", (Governor newGovernor) =>
-{
-    newGovernor.Id = governors.Any() ? governors.Max(g => g.Id) + 1 : 1;
-    governors.Add(newGovernor);
-
-    return Results.Created($"/api/governors/{newGovernor.Id}", new GovernorDTO
-    {
-        Id = newGovernor.Id,
-        Name = newGovernor.Name,
-        Active = newGovernor.Active,
-        ColonyId = newGovernor.ColonyId
-    });
-});
-
-app.MapPut("/api/governors/{id}", (int id, Governor governorUpdate) =>
-{
-    Governor governor = governors.FirstOrDefault(g => g.Id == id);
-    if (governor == null) return Results.NotFound();
-    if (id != governorUpdate.Id) return Results.BadRequest();
-
-    if (governor.Active != governorUpdate.Active)
-    {
-        var historyRecord = new GovernorHistory
-        {
-            Id = governorHistories.Any() ? governorHistories.Max(gh => gh.Id) + 1 : 1,
-            GovernorId = governor.Id,
-            ColonyId = governor.ColonyId,
-            PreviousStatus = governor.Active,
-            NewStatus = governorUpdate.Active,
-            Timestamp = DateTime.UtcNow
-        };
-        governorHistories.Add(historyRecord);
-    }
-
-    governor.Name = governorUpdate.Name;
-    governor.ColonyId = governorUpdate.ColonyId;
-    governor.Active = governorUpdate.Active;
-
-    return Results.NoContent();
-});
-
-app.MapGet("/api/governorhistories", () =>
-{
-    return governorHistories.OrderByDescending(gh => gh.Timestamp).Select(gh => new GovernorHistoryDTO
-    {
-        Id = gh.Id,
-        GovernorId = gh.GovernorId,
-        ColonyId = gh.ColonyId,
-        PreviousStatus = gh.PreviousStatus,
-        NewStatus = gh.NewStatus,
-        Timestamp = gh.Timestamp
-    });
-});
-
-app.MapGet("/api/governorhistories/{id}", (int id) =>
-{
-    GovernorHistory history = governorHistories.FirstOrDefault(gh => gh.Id == id);
-    if (history == null) return Results.NotFound();
-    
-    return Results.Ok(new GovernorHistoryDTO
-    {
-        Id = history.Id,
-        GovernorId = history.GovernorId,
-        ColonyId = history.ColonyId,
-        PreviousStatus = history.PreviousStatus,
-        NewStatus = history.NewStatus,
-        Timestamp = history.Timestamp
-    });
-});
 
 app.Run();
 
