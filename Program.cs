@@ -459,7 +459,78 @@ app.MapGet("/api/transactions/{id}", (int id) =>
     });
 });
 
+app.MapGet("/api/miningFacilities", (bool? active) =>
+{
+    return facilities.Where(mf => active == null || mf.Active == active).Select(mf => new MiningFacilityDTO
+    {
+        Id = mf.Id,
+        Name = mf.Name,
+        Active = mf.Active
+    });
+});
 
+app.MapGet("/api/miningFacilities/{id}", (int id) =>
+{
+    MiningFacility miningFacility = facilities.FirstOrDefault(mf => mf.Id == id);
+
+    if (miningFacility == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(new MiningFacilityDTO
+    {
+        Id = miningFacility.Id,
+        Name = miningFacility.Name,
+        Active = miningFacility.Active
+    });
+});
+
+app.MapPost("/api/miningFacilities", (MiningFacility miningFacility) =>
+{
+    miningFacility.Id = facilities.Max(mf => mf.Id) + 1;
+    facilities.Add(miningFacility);
+
+    return Results.Created($"/api/miningFacilities/{miningFacility.Id}", new MiningFacilityDTO
+    {
+        Id = miningFacility.Id,
+        Name = miningFacility.Name,
+        Active = miningFacility.Active
+    });
+});
+
+app.MapPut("/api/miningFacilities/{id}", (int id, MiningFacility miningFacility) =>
+{
+    MiningFacility miningFacilityToUpdate = facilities.FirstOrDefault(mf => mf.Id == id);
+
+    if (miningFacilityToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (id != miningFacility.Id)
+    {
+        return Results.BadRequest();
+    }
+
+    miningFacilityToUpdate.Id = miningFacility.Id;
+    miningFacilityToUpdate.Name = miningFacility.Name;
+    miningFacilityToUpdate.Active = miningFacility.Active;
+
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/miningFacilities/{id}", (int id) =>
+{
+    MiningFacility miningFacility = facilities.FirstOrDefault(mf => mf.Id == id);
+
+    if (miningFacility == null)
+    {
+        return Results.NotFound();
+    }
+
+    facilities.RemoveAt(id - 1);
+    return Results.NoContent();
+});
 
 app.Run();
 
